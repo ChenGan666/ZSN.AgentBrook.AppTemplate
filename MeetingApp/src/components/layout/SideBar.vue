@@ -1,48 +1,32 @@
 <template>
   <div class="sidebar-container">
     <div class="sidebar-header">
-      <!-- 会议助手：会议为主入口，Chat/Agent 为辅助 -->
+      <!-- 会议助手：会议为唯一主入口 -->
       <el-button type="primary" class="meeting-btn" @click="goMeeting">
         <el-icon><Microphone /></el-icon>
         <span>开始会议</span>
       </el-button>
-
-      <!-- Chat / Agent 模式切换（辅助） -->
-      <div class="mode-switch-wrap">
-        <button
-          class="mode-tab"
-          :class="{ active: appStore.mode === 'chat' }"
-          @click="switchMode('chat')"
-        >
-          <el-icon><ChatDotRound /></el-icon>
-          <span>Chat</span>
-        </button>
-        <button
-          class="mode-tab"
-          :class="{ active: appStore.mode === 'agent' }"
-          @click="switchMode('agent')"
-        >
-          <el-icon><MagicStick /></el-icon>
-          <span>Agent</span>
-        </button>
-      </div>
-      <el-button v-if="appStore.mode === 'chat'" type="primary" plain class="new-chat-btn" @click="emit('newChat')">
-        <el-icon><Plus /></el-icon>
-        {{ t('chat.newChat') }}
-      </el-button>
     </div>
 
-    <!-- Chat 模式：会话列表；Agent 模式：会话列表 + 简短提示 -->
-    <div class="sidebar-sessions" v-if="appStore.mode === 'chat'">
-      <SessionList />
-    </div>
-    <div class="sidebar-sessions agent-session-wrap" v-else>
-      <AgentSessionList />
-      <div class="agent-tip-mini">
-        <el-icon><InfoFilled /></el-icon>
-        <span>{{ t('agent.agentTip') }}</span>
+    <!-- 导航列表(仅会议/设置) -->
+    <nav class="sidebar-nav">
+      <div
+        class="nav-item"
+        :class="{ active: route.path === '/meeting' }"
+        @click="goMeeting"
+      >
+        <el-icon><Microphone /></el-icon>
+        <span>会议</span>
       </div>
-    </div>
+      <div
+        class="nav-item"
+        :class="{ active: route.path === '/settings' }"
+        @click="toggleSettings"
+      >
+        <el-icon><Setting /></el-icon>
+        <span>设置</span>
+      </div>
+    </nav>
 
     <div class="sidebar-footer">
       <div class="user-info" v-if="userStore.userInfo" @click="toggleSettings">
@@ -59,35 +43,17 @@
 </template>
 
 <script setup lang="ts">
-import { Plus, Setting, ChatDotRound, MagicStick, InfoFilled, Microphone } from '@element-plus/icons-vue'
+import { Setting, Microphone } from '@element-plus/icons-vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useI18n } from 'vue-i18n'
 import { useUserStore } from '@/stores/user'
-import { useAppStore, type AppMode } from '@/stores/app'
-import SessionList from '@/components/chat/SessionList.vue'
-import AgentSessionList from '@/components/agent/AgentSessionList.vue'
 
-const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
-const appStore = useAppStore()
-const emit = defineEmits<{ newChat: [] }>()
 
 /** 会议助手主入口：跳转会议页。 */
 function goMeeting() {
   router.push('/meeting')
-}
-
-/** 切换 Chat / Agent 模式：更新 store mode + 跳转对应路由（下方完整界面切换）。 */
-function switchMode(mode: AppMode) {
-  if (appStore.mode === mode) return
-  appStore.setMode(mode)
-  if (mode === 'agent') {
-    router.push('/agent')
-  } else {
-    router.push('/chat')
-  }
 }
 
 function toggleSettings() {
@@ -114,88 +80,44 @@ function toggleSettings() {
 /* 会议助手主入口按钮 */
 .meeting-btn {
   width: 100%;
-  margin-bottom: 10px;
   height: 40px;
   font-size: 14px;
   font-weight: 500;
 }
 
-/* Chat / Agent 模式切换器（左上区域） */
-.mode-switch-wrap {
-  display: flex;
-  gap: 4px;
-  padding: 3px;
-  margin-bottom: 10px;
-  background: var(--el-fill-color-light, #f5f7fa);
-  border-radius: 8px;
-}
-
-.mode-tab {
+/* 导航列表 */
+.sidebar-nav {
   flex: 1;
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+
+.nav-item {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 7px 0;
-  border: none;
-  background: transparent;
-  border-radius: 6px;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
   color: var(--text-secondary, #909399);
   transition: all 0.2s;
 
   &:hover {
+    background: var(--el-fill-color-light, #f5f7fa);
     color: var(--text-primary, #303133);
   }
 
   &.active {
-    background: var(--bg-card, #fff);
+    background: var(--el-color-primary-light-9, #ecf5ff);
     color: var(--el-color-primary, #409eff);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    font-weight: 500;
   }
 
   .el-icon {
-    font-size: 15px;
-  }
-}
-
-.new-chat-btn {
-  width: 100%;
-}
-
-.sidebar-sessions {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.sidebar-sessions.agent-session-wrap {
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  overflow: hidden;
-}
-
-.agent-tip-mini {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 10px 14px;
-  margin: 0 12px 12px;
-  border-radius: 8px;
-  background: var(--el-color-primary-light-9, #ecf5ff);
-  border: 1px solid var(--el-color-primary-light-7, #d9ecff);
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--text-regular, #606266);
-  flex-shrink: 0;
-
-  .el-icon {
-    flex-shrink: 0;
-    font-size: 14px;
-    color: var(--el-color-primary, #409eff);
-    margin-top: 2px;
+    font-size: 16px;
   }
 }
 

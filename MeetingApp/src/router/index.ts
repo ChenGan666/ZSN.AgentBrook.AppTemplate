@@ -30,16 +30,6 @@ const router = createRouter({
           component: () => import('@/views/MeetingView.vue'),
         },
         {
-          path: 'chat',
-          name: 'Chat',
-          component: () => import('@/views/ChatView.vue'),
-        },
-        {
-          path: 'agent',
-          name: 'Agent',
-          component: () => import('@/views/AgentView.vue'),
-        },
-        {
           path: 'settings',
           name: 'Settings',
           component: () => import('@/views/SettingsView.vue'),

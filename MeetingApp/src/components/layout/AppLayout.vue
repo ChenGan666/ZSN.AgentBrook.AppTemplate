@@ -7,7 +7,7 @@
         class="sidebar"
         :style="{ width: appStore.sidebarCollapsed ? '0px' : `${appStore.sidebarWidth}px` }"
       >
-        <SideBar @new-chat="handleNewChat" />
+        <SideBar />
       </aside>
 
       <div
@@ -24,27 +24,12 @@
       </main>
     </div>
 
-    <el-dialog v-model="showAppPicker" :title="t('chat.selectApp')" width="400px">
-      <div class="app-list">
-        <div
-          v-for="app in chatStore.apps"
-          :key="app.AppID"
-          class="app-item"
-          @click="selectApp(app)"
-        >
-          <span class="app-name">{{ app.Name }}</span>
-          <span v-if="app.Description" class="app-desc">{{ app.Description }}</span>
-        </div>
-      </div>
-    </el-dialog>
-
     <FloatingToolbar />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { computed, onMounted } from 'vue'
 import { isTauri, platform } from '@/platform'
 import { useAppStore } from '@/stores/app'
 import { useChatStore } from '@/stores/chat'
@@ -55,12 +40,9 @@ import FloatingToolbar from '@/components/common/FloatingToolbar.vue'
 import { useConnection } from '@/composables/useConnection'
 import { useWindowState } from '@/composables/useWindowState'
 import { useGlobalShortcut } from '@/composables/useGlobalShortcut'
-import type { AppInfo } from '@/types/chat'
 
-const { t } = useI18n()
 const appStore = useAppStore()
 const chatStore = useChatStore()
-const showAppPicker = ref(false)
 
 // ====== 应用工厂：AppID 锁定 ======
 // 构建期由 AutoPublishJob 注入 .env.production 的 VITE_LOCKED_APP_ID。
@@ -120,25 +102,6 @@ onMounted(async () => {
     }
   })
 })
-
-async function handleNewChat() {
-  if (isAppLocked.value) {
-    // 锁定模式：新建会话直接复用锁定的 App，不弹选择器
-    chatStore.resetToApp(LOCKED_APP_ID)
-    return
-  }
-  if (chatStore.apps.length === 0) {
-    await chatStore.fetchApps()
-  }
-  showAppPicker.value = true
-}
-
-function selectApp(app: AppInfo) {
-  showAppPicker.value = false
-  // 通过 store action 切换 App：会取消当前会话的活动流并重置选择/消息。
-  // 原先这里直接赋值 store 字段，绕过了 action，不清流也不一致。
-  chatStore.resetToApp(app.AppID)
-}
 </script>
 
 <style lang="scss" scoped>
